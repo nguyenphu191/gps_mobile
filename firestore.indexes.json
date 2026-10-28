@@ -1,0 +1,24 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "location_shares",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "toUid",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": [],
+  "_notes": {
+    "setup_guide": "Full console setup (rules, this index, TTL policy, Cloudinary, push) is documented in docs/firebase-setup.md.",
+    "location_shares_ttl": "Firestore TTL policies require the Blaze plan (403 billing disabled on Spark). Expiry is handled entirely client-side by FriendService.purgeExpiredLocationShares(), which sweeps both toUid and fromUid. See docs/firebase-setup.md.",
+    "location_shares_rules": "Both parties may delete a share: the recipient from the list UI, either side during the client-side expiry sweep. See firestore.rules."
+  }
+}

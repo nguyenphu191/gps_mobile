@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3 -c ' *)",
+      "Bash(pip3 install *)",
+      "Bash(flutter pub *)",
+      "Bash(find ~/.pub-cache -path \"*/share_plus-10*/lib/*.dart\" | head -10)"
+    ]
+  }
+}

@@ -1,0 +1,97 @@
+rules_version = '2';
+
+// Deploy: firebase deploy --only firestore:rules
+// Or paste into Firebase Console > Firestore Database > Rules > Publish.
+// Setup notes: docs/firebase-setup.md
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // ── User profiles ────────────────────────────────────────────
+    // Reading is open to any signed-in user, and it has to be:
+    //   * checkUsernameExists / searchUserByUsername query the whole
+    //     collection by `username` (the first runs during sign-up).
+    //   * friendProfilesProvider reads friends' docs by document id —
+    //     rules cannot see the friendship, so it can't be constrained.
+    //   * sendLocation reads the recipient's fcmTokens to push to them.
+    // Writing stays locked to the owner.
+    match /users/{uid} {
+      allow read: if signedIn();
+      allow write: if signedIn() && request.auth.uid == uid;
+    }
+
+    // ── Notification inbox ───────────────────────────────────────
+    // Only the owner reads their inbox or marks rows read.
+    // Creating is open to any signed-in user because notifications are fanned
+    // out from the sender's device (there are no Cloud Functions): a sender
+    // must be able to write into a friend's inbox. The two guards below stop
+    // them forging someone else's name or pre-marking a row as read.
+    match /users/{uid}/notifications/{id} {
+      allow read, update, delete: if signedIn() && request.auth.uid == uid;
+
+      allow create: if signedIn()
+                    && request.auth.uid == request.resource.data.fromUid
+                    && request.resource.data.read == false;
+    }
+
+    // ── Friend requests / friendships ────────────────────────────
+    match /friends/{id} {
+      allow read: if signedIn()
+                  && (request.auth.uid == resource.data.senderId
+                      || request.auth.uid == resource.data.receiverId);
+
+      allow create: if signedIn()
+                    && request.auth.uid == request.resource.data.senderId;
+
+      // Either side: the receiver accepts/declines, the sender cancels,
+      // and both can remove the friendship (FriendService.removeFriend).
+      allow update, delete: if signedIn()
+                            && (request.auth.uid == resource.data.senderId
+                                || request.auth.uid == resource.data.receiverId);
+    }
+
+    // ── Photos/videos shared with friends (metadata only) ────────
+    match /shared_media/{id} {
+      // friendsMedia() queries by `whereIn ownerUid`; rules can't check
+      // the friendship, so reads stay open to signed-in users.
+      allow read: if signedIn();
+
+      // The document id is a client-chosen media id. Without the
+      // `resource == null` guard, anyone could guess an id and overwrite
+      // someone else's document by supplying their own ownerUid.
+      allow create: if signedIn()
+                    && resource == null
+                    && request.auth.uid == request.resource.data.ownerUid;
+
+      allow update, delete: if signedIn()
+                            && request.auth.uid == resource.data.ownerUid;
+    }
+
+    // ── One-shot locations sent to a friend ──────────────────────
+    match /location_shares/{id} {
+      // The recipient reads them for the list; the sender only reads their
+      // own during the expiry sweep.
+      allow read: if signedIn()
+                  && (request.auth.uid == resource.data.toUid
+                      || request.auth.uid == resource.data.fromUid);
+
+      allow create: if signedIn()
+                    && request.auth.uid == request.resource.data.fromUid;
+
+      // The recipient deletes from the list; either side may delete during
+      // the expiry sweep, since Firestore TTL needs the Blaze plan and this
+      // client-side purge is the only cleanup there is.
+      allow delete: if signedIn()
+                    && (request.auth.uid == resource.data.toUid
+                        || request.auth.uid == resource.data.fromUid);
+
+      // No update: a share is never edited after it is created.
+    }
+
+    // Anything else is denied by default — no catch-all match here.
+  }
+}

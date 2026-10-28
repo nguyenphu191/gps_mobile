@@ -1,0 +1,46 @@
+{
+  "project_info": {
+    "project_number": "1022476168198",
+    "project_id": "gps-2a026",
+    "storage_bucket": "gps-2a026.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1022476168198:android:c4fd1b2cf7513fcb63e787",
+        "android_client_info": {
+          "package_name": "com.dretech.locashot.gps"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "1022476168198-umvbnricg1spr7ssvion9lrdclk2n8on.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAsZbZgSGQfFvuDMfer42G5F3a3vBjFYZk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "1022476168198-umvbnricg1spr7ssvion9lrdclk2n8on.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "1022476168198-7v7uraqj0ua5ko1nu534sh820r2p9eq9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.geotag.gpscamerastamp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
